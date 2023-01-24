@@ -1,11 +1,13 @@
-import signal
+import errno
+import fcntl
+import os
 import sys
 import json
 from enum import Enum
+import socket
 from typing import Optional
 
 import numpy as np
-import zmq
 
 import constants
 
@@ -90,14 +92,18 @@ class Client:
 
     def __init__(self, is_yellow=False):
         self.host = "127.0.0.1"
-        self.port = constants.yellow_port if is_yellow else constants.blue_port
+        self.data_port = constants.yellow_data_port if is_yellow else constants.blue_data_port
+        self.send_port = constants.yellow_send_port if is_yellow else constants.blue_send_port
 
         self.running = True
 
         # Receive socket
-        self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.REP)
-        self.socket.connect('tcp://127.0.0.1:%d' % self.port)
+        self.recv_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.recv_socket.bind(('0.0.0.0', self.data_port))
+        fcntl.fcntl(self.recv_socket, fcntl.F_SETFL, os.O_NONBLOCK)
+
+        self.send_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.send_socket.connect((self.host, self.send_port))
 
     def __enter__(self):
         return self
@@ -111,13 +117,14 @@ class Client:
             data.append(command.toJson())
         data_send = json.dumps(data)
         print(data_send)
-        self.socket.send(data_send.encode())
+        self.send_socket.sendall(data_send.encode())
 
     def recv_data(self):
         try:
-            return self.socket.recv_json(zmq.DONTWAIT)
-        except zmq.ZMQError as e:
-            if e.errno == zmq.EAGAIN:
+            return json.loads(self.recv_socket.recv(4096))
+        except socket.error as e:
+            err = e.args[0]
+            if err == errno.EAGAIN or err == errno.EWOULDBLOCK:
                 return None
             else:
                 print(e)
