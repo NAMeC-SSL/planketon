@@ -1,6 +1,6 @@
 from manager import Manager
 from plankton_client import Client,Command
-
+from sys import argv
 
 class ExampleManager(Manager):
     def step(self):
@@ -15,6 +15,7 @@ class ExampleManager(Manager):
 
 
 if __name__ == "__main__":
-    with Client() as client:
+    is_yellow = len(argv) > 1 and argv[1] == '-y'
+    with Client(is_yellow) as client:
         manager = ExampleManager(client=client)
         manager.run()
