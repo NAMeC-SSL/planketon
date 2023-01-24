@@ -17,7 +17,6 @@ class KICK(Enum):
 
 
 class Command:
-
     def __init__(self, id=0, forward_velocity=0.0, left_velocity=0.0, angular_velocity=0.0,
                  kick=KICK.NO_KICK, charge=False, dribbler=0.0):
         self.id = id

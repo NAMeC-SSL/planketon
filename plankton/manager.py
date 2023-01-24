@@ -35,11 +35,7 @@ class Manager:
     def __init__(self, client: Client):
         self.client = client
         self.running = True
-
-        # PID controller
-        self.old_e: np.ndarray = np.array([0, 0, 0])
-        self.integral: np.ndarray = np.array([0, 0, 0])
-
+        
         teams = ["allies", "enemies"]
 
         self.robots: [str, Dict[int, Robot]] = {
