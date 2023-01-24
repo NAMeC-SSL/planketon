@@ -19,7 +19,7 @@ class KICK(Enum):
 class Command:
 
     def __init__(self, id=0, forward_velocity=0.0, left_velocity=0.0, angular_velocity=0.0,
-                 kick=KICK.NO_KICK, charge=False, dribbler=0.0):
+                 kick=KICK.NO_KICK, power=0.5, charge=False, dribbler=0.0):
         self.id = id
         self.forward_velocity = forward_velocity
         self.left_velocity = left_velocity
@@ -31,8 +31,33 @@ class Command:
             print("There is an error with the kick int send")
         else:
             self.kick = kick
+            self.power = power
 
     def toJson(self):
+        if self.kick.value == KICK.STRAIGHT_KICK:
+            return {
+                "Command": {
+                    "id": self.id,
+                    "forward_velocity": self.forward_velocity,
+                    "left_velocity": self.left_velocity,
+                    "angular_velocity": self.angular_velocity,
+                    "charge": self.charge,
+                    "kick": {"StraightKick": {"power": self.power}},
+                    "dribbler": self.dribbler
+                }
+            }
+        elif self.kick.value == KICK.CHIP_KICK:
+            return {
+                "Command": {
+                    "id": self.id,
+                    "forward_velocity": self.forward_velocity,
+                    "left_velocity": self.left_velocity,
+                    "angular_velocity": self.angular_velocity,
+                    "charge": self.charge,
+                    "kick": {"ChipKick": {"power": self.power}},
+                    "dribbler": self.dribbler
+                }
+            }
         return {
             "Command": {
                 "id": self.id,
@@ -40,7 +65,6 @@ class Command:
                 "left_velocity": self.left_velocity,
                 "angular_velocity": self.angular_velocity,
                 "charge": self.charge,
-                "kick": self.kick.value,
                 "dribbler": self.dribbler
             }
         }
@@ -85,8 +109,8 @@ class Client:
         data = []
         for command in self.commands:
             data.append(command.toJson())
-        print(data)
-        data_send = json.dumps({"commands": data})
+        data_send = json.dumps(data)
+        print(data_send)
         self.socket.send(data_send.encode())
 
     def recv_data(self):
