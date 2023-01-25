@@ -7,8 +7,10 @@ import numpy as np
 import constants
 from plankton_client import Client, Robot, KICK, Command
 
+
 def angle_wrap(alpha):
     return (alpha + np.pi) % (2 * np.pi) - np.pi
+
 
 def frame(x, y=0, orientation=0):
     if type(x) is tuple:
@@ -18,6 +20,7 @@ def frame(x, y=0, orientation=0):
 
     return np.array([[cos, -sin, x], [sin, cos, y], [0, 0, 1]])
 
+
 def frame_inv(frame):
     frame_inv = np.eye(3)
     R = frame[:2, :2]
@@ -26,7 +29,7 @@ def frame_inv(frame):
     return frame_inv
 
 
-def robot_frame(robot : Robot):
+def robot_frame(robot: Robot):
     pos = robot.position
     return frame(pos[0], pos[1], robot.orientation)
 
@@ -80,6 +83,7 @@ class Manager:
                 self.robots[str_team][number].orientation = np.array(robot["robot"]["orientation"])
 
     def update_data(self, data):
+        print(data)
         if "ball" in data:
             self.update_ball(data)
 
@@ -102,7 +106,8 @@ class Manager:
             self.step()
             self.client.send()
 
-    def go_to(self, robot: Robot, x: float, y: float, orientation: float, charge=False, dribble=0.0, kick=KICK.NO_KICK) -> bool:
+    def go_to(self, robot: Robot, x: float, y: float, orientation: float, charge=False, power=0.0, dribble=0.0,
+              kick=KICK.NO_KICK) -> bool:
         p = 3
 
         Ti = frame_inv(robot_frame(robot))
@@ -114,12 +119,14 @@ class Manager:
         order = np.array([p, p, 1.5]) * e
 
         self.client.commands.append(
-            Command(id=robot.id, forward_velocity=order[0], left_velocity=order[1], angular_velocity=order[2], kick=kick, charge=charge, dribbler=dribble)
+            Command(id=robot.id, forward_velocity=order[0], left_velocity=order[1], angular_velocity=order[2],
+                    kick=kick, charge=charge, dribbler=dribble, power=power)
         )
 
         return arrived
 
     def control(self, robot: Robot, forward_velocity=0.0, left_velocity=0.0, angular_velocity=0.0,
-                kick=KICK.NO_KICK, charge=False, dribbler=0.0):
-        self.client.commands.append(Command(robot.id, forward_velocity, left_velocity, angular_velocity,
-                                            kick, charge, dribbler))
+                kick=KICK.NO_KICK, charge=False, power=0.0, dribbler=0.0):
+        self.client.commands.append(Command(id=robot.id, forward_velocity=forward_velocity, left_velocity=left_velocity,
+                                            angular_velocity=angular_velocity,
+                                            kick=kick, power=power, charge=charge, dribbler=dribbler))
