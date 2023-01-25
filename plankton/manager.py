@@ -106,6 +106,7 @@ class Manager:
             data = self.client.recv_data()
             if data is None:
                 continue
+            print(data)
             self.update_data(data)
             self.step()
             self.client.send()

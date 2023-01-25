@@ -2,7 +2,7 @@ import numpy as np
 
 from .basic_avoid_consts import danger_circle_radius
 from .basic_avoid_types import Point, Circle
-from .basic_avoid_utils import angle_towards
+from .basic_avoid_utils import angle_towards, compute_intersections, compute_waypoint
 from manager import Manager
 from plankton_client import Robot
 

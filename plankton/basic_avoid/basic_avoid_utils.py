@@ -17,7 +17,7 @@ def traj_function(a: Point, b: Point, general_form=False) -> Callable[[float, [f
         Set to True to return the general form of the equation lambda function.
     """
     m: float = -1
-    if np.isclose([b.y - a.y], [0.]):
+    if np.isclose([b.x - a.x], [0.]).all():
         m = 1
     else:
         m = (b.y - a.y) / (b.x - a.x)
