@@ -35,7 +35,8 @@ class Command:
             self.power = power
 
     def toJson(self):
-        if self.kick.value == KICK.STRAIGHT_KICK:
+        if self.kick == KICK.STRAIGHT_KICK:
+            print("sa")
             return {
                 "Command": {
                     "id": self.id,
@@ -47,7 +48,7 @@ class Command:
                     "dribbler": self.dribbler
                 }
             }
-        elif self.kick.value == KICK.CHIP_KICK:
+        elif self.kick == KICK.CHIP_KICK:
             return {
                 "Command": {
                     "id": self.id,
