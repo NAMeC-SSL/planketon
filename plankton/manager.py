@@ -87,7 +87,6 @@ class Manager:
                 self.robots[str_team][number].orientation = np.array(robot["robot"]["orientation"])
 
     def update_data(self, data):
-        print(data)
         if "ball" in data:
             self.update_ball(data)
 
@@ -106,14 +105,13 @@ class Manager:
             data = self.client.recv_data()
             if data is None:
                 continue
-            print(data)
             self.update_data(data)
             self.step()
             self.client.send()
 
     def go_to(self, robot: Robot, x: float, y: float, orientation: float, charge=False, power=0.0, dribble=0.0,
               kick=KICK.NO_KICK) -> bool:
-        p = 3
+        p = 1
 
         Ti = frame_inv(robot_frame(robot))
         target_in_robot = Ti @ np.array([x, y, 1])
