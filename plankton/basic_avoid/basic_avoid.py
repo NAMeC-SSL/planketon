@@ -33,10 +33,10 @@ def ally_goto_and_avoid(manager: Manager, robot: Robot, dst: np.array, avoid):
 
     _, is_circle_crossed = compute_intersections(circle=dgr_circle, line=(src, dst))
     if not is_circle_crossed or np.linalg.norm(src - dst) < np.linalg.norm(avoid.position - dst):
-        print("No avoiding necessary, just go to the position")
+        print("Direct run")
         manager.go_to(robot, dst[0], dst[1], 0.)
-
     else:
+        print("Going to waypoint")
         waypoint = compute_waypoint(circle=dgr_circle, line=(src, dst))
 
         # Go to waypoint

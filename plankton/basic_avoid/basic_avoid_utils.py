@@ -17,19 +17,17 @@ def traj_function(a: np.array, b: np.array, general_form=False) -> Callable[[flo
         Set to True to return the general form of the equation lambda function.
     """
     m: float = -1
-    if np.isclose(b - a, [0.]).all():
+    if np.isclose(b - a, [0.], rtol=0.6).all():
         m = 1
     else:
-        print(b)
-        print(a)
         m = (b[1] - a[1]) / (b[0] - a[0])
 
     # Use point a to solve the ordinate of the origin of the function
     # Because y = m*x + p ; y - m*x = p
     p: float = a[1] - m * a[0]
     if general_form:
-        return lambda x, y: m*x + p - y
-    return lambda x: m*x + p
+        return lambda x, y: m * x + p - y
+    return lambda x: m * x + p
 
 
 def circle_gen_eq(center: np.array, r: float) -> Callable[[float, float], float]:
@@ -133,10 +131,10 @@ def compute_waypoint(circle: Circle, line: tuple[np.array, np.array], forward_th
 
     # Using the circle's center point, and the found angle towards the line, we can compute
     # another point that is aligned to the vector
-    r: float = 42.  # Arbitrary length, the value itself isn't important, but must be > 1
+    r: float = 2.  # Arbitrary length, the value itself isn't important, but must be > 1
     aligned_pt: np.array = np.array(
-        circle.center[0] + (r * np.cos(waypoint_vec_theta)),  # | Polar to cartesian coordinates conversion
-        circle.center[1] + (r * np.sin(waypoint_vec_theta))   # | x = r * cos(theta)  and  y = r * sin(theta)
+        [circle.center[0] + (r * np.cos(waypoint_vec_theta)),  # | Polar to cartesian coordinates conversion
+         circle.center[1] + (r * np.sin(waypoint_vec_theta))]  # | x = r * cos(theta)  and  y = r * sin(theta)
     )
 
     # Get intersection between calculated vector and danger circle, which is the effective waypoint to attain

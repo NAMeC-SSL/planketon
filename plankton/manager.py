@@ -111,7 +111,7 @@ class Manager:
 
     def go_to(self, robot: Robot, x: float, y: float, orientation: float, charge=False, power=0.0, dribble=0.0,
               kick=KICK.NO_KICK) -> bool:
-        p = 1
+        p = 2
 
         Ti = frame_inv(robot_frame(robot))
         target_in_robot = Ti @ np.array([x, y, 1])
