@@ -46,11 +46,11 @@ class Manager:
         teams = ["allies", "enemies"]
 
         self.robots: [str, Dict[int, Robot]] = {
-            "allies": [Robot(robot_id, self) for robot_id in range(constants.max_robots)],
-            "enemies": [Robot(robot_id, self) for robot_id in range(constants.max_robots)]
+            "allies": [Robot(robot_id, self) for robot_id in range(constants.max_robots//2)],
+            "enemies": [Robot(robot_id, self) for robot_id in range(constants.max_robots//2)]
         }
 
-        for (team, number) in [(team, number) for team in teams for number in range(constants.max_robots)]:
+        for (team, number) in [(team, number) for team in teams for number in range(constants.max_robots//2)]:
             self.__dict__["%s%d" % (team, number)] = self.robots[team][number]
 
         self.ball = None

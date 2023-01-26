@@ -14,4 +14,4 @@ yellow_data_port: int = 11303
 """
 Robot constants
 """
-max_robots = 16
+max_robots = 12
