@@ -1,7 +1,21 @@
 import numpy as np
 from scipy.optimize import fsolve as scipy_fsolve
+
+from .basic_avoid_consts import danger_circle_radius
 from .basic_avoid_types import Circle
 from typing import Callable
+from plankton_client import Robot
+
+
+def distance(a: np.array, b: np.array):
+    return np.sqrt((b[0] - a[0])**2 + (b[1] - a[1])**2)
+
+
+def danger_circle(r: Robot):
+    return Circle(
+        r.position,
+        danger_circle_radius
+    )
 
 
 def traj_function(a: np.array, b: np.array, general_form=False) -> Callable[[float, [float]], float]:
@@ -17,8 +31,8 @@ def traj_function(a: np.array, b: np.array, general_form=False) -> Callable[[flo
         Set to True to return the general form of the equation lambda function.
     """
     m: float = -1
-    if np.isclose(b - a, [0.], rtol=0.6).all():
-        m = 1
+    if np.isclose(abs(b[0]) - abs(a[0]), [0.], rtol=0.2).all():
+        m = (b[1] - a[1]) / 1
     else:
         m = (b[1] - a[1]) / (b[0] - a[0])
 
