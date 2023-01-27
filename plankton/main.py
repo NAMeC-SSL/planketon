@@ -5,6 +5,7 @@ from basic_avoid import basic_avoid
 class ExampleManager(Manager):
     def step(self):
         basic_avoid.step(self)
+        # self.go_to(self.robots["allies"][0], -1.53122112, -1.77177591, 0.)
 
 
 if __name__ == "__main__":

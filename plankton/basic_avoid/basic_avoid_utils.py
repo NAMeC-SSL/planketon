@@ -31,8 +31,12 @@ def traj_function(a: np.array, b: np.array, general_form=False) -> Callable[[flo
         Set to True to return the general form of the equation lambda function.
     """
     m: float = -1
-    if np.isclose(abs(b[0]) - abs(a[0]), [0.], rtol=0.2).all():
-        m = (b[1] - a[1]) / 1
+
+    # Can't create a vertical line function
+    # Approximating it using a very low slope coefficient when both x coordinates are close
+    # TODO: create a test case for this approximation
+    if np.isclose(b[0] - a[0], [0.], rtol=0.1).all():
+        m = 0.000001
     else:
         m = (b[1] - a[1]) / (b[0] - a[0])
 

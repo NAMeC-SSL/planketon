@@ -28,15 +28,16 @@ def goto_avoid(manager: Manager, robot: Robot, dst: np.array, avoid_list: list[R
 
     # Compute waypoints to avoid each robot in the avoid list
     for enn in avoid_list:
-        print(enn)
         dgr_circle = danger_circle(enn)
         _, is_circle_crossed = compute_intersections(circle=dgr_circle, line=(src, dst))
 
-        print(is_circle_crossed)
-
-        if is_circle_crossed and distance(src, enn.position) > danger_circle_radius:  # Second check required to ignore waypoint if it is attained already
-            if distance(src, dst) > distance(src, enn.position):
+        if is_circle_crossed:
+            if np.linalg.norm(dst - src) > np.linalg.norm(enn.position - src):
+                print(f"enn pos : {enn.position}")
+                print(f"enn dist : {np.linalg.norm(enn.position - src)}")
+                print(f"dst dist : {np.linalg.norm(dst - src)}")
                 waypoints.append(compute_waypoint(circle=dgr_circle, line=(src, dst)))
+                print(f"waypoints : {waypoints}")
 
     # If there are waypoints to go to
     if len(waypoints) > 0:
@@ -47,10 +48,14 @@ def goto_avoid(manager: Manager, robot: Robot, dst: np.array, avoid_list: list[R
         index_min_dst = min(range(len(wp_dists)), key=wp_dists.__getitem__)
         wp = waypoints[index_min_dst]
 
-        manager.go_to(robot, wp[0], wp[1], 0.)
+        print("going to waypoint")
+        print(f"real waypoint : {wp}")
+        # manager.go_to(robot, wp[0], wp[1], 0.)
     else:
         # Otherwise you go to the destination
-        manager.go_to(robot, dst[0], dst[1], 0.)
+        print("straight to dst")
+        # manager.go_to(robot, dst[0], dst[1], 0.)
+
 
 def visualize_circle(manager:Manager, robot: Robot, circle: Circle):
     """

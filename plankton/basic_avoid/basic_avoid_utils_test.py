@@ -1,7 +1,8 @@
-from basic_avoid_types import Circle
-from basic_avoid_utils import compute_intersections
 import unittest
 import numpy as np
+
+from basic_avoid.basic_avoid_types import Circle
+from basic_avoid.basic_avoid_utils import compute_intersections
 
 
 class BasicAvoidUtilsTest(unittest.TestCase):
