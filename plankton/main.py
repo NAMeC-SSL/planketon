@@ -40,8 +40,7 @@ class ExampleManager(Manager):
 
         self.attack()
         self.goal()
-
-
+        self.defende()
 
         # for id in self.order:
         #     if self.allie(id).position is None:continue # check if bot exist
@@ -53,7 +52,7 @@ class ExampleManager(Manager):
         #         case 'attacker': self.attack(id)
 
     def closestAttacker(self):
-        minId = self.roles['attacker'][0]
+        minId = -1
         minDist = 100
         for attackerId in self.roles['attacker']:
             d = self.distToBall(attackerId)
@@ -64,6 +63,7 @@ class ExampleManager(Manager):
 
     def attack(self):
         id = self.closestAttacker()
+        if id == -1:return
         if self.distToBall(id) < 0.11 :self.allie(id).status = 'dribbling'
         else:self.allie(id).status = ''
         match self.allie(id).status:
@@ -72,22 +72,30 @@ class ExampleManager(Manager):
             case '': 
                 self.goToBall(id)
 
-    def defende(self, id):
-        pass
+    def defende(self):
+        for i in range(len(self.roles['defender'])):
+            id = self.roles['defender'][i]
+            w=self.field['width'] 
+            r = w/ len(self.roles['defender'])
+            (-w/2)+r*i
+            (-w/2)+r*(i+1)
 
+            y = min(max(self.ball[1], (-w/2)+r*i), (-w/2)+r*(i+1))
+            self.go_to(self.allie(id),x=self.allie(id).side, y=y, orientation=self.angleTo(self.allie(id).position, self.ball))
+       
     def goal(self):
+        if len(self.roles['goal']) == 0:return
         id = self.roles['goal'][0]
         if self.allie(id).position[1] > 0:
-            self.go_to(self.allie(id),x=self.allie(id).side*self.field['length']/2.1, y=min(self.ball[1], self.field['goal_width']/2), orientation=self.angleTo(self.allie(id).position, self.ball))
+            self.go_to(self.allie(id),x=self.allie(id).side*(self.field['length']+0.1), y=min(self.ball[1], self.field['goal_width']/2), orientation=self.angleTo(self.allie(id).position, self.ball))
         else :
-            self.go_to(self.allie(id),x=self.allie(id).side* self.field['length']/2.1, y=max(self.ball[1], -self.field['goal_width']/2), orientation=self.angleTo(self.allie(id).position, self.ball))
+            self.go_to(self.allie(id),x=self.allie(id).side* (self.field['length']+0.1), y=max(self.ball[1], -self.field['goal_width']/2), orientation=self.angleTo(self.allie(id).position, self.ball))
        
         # if (abs(( bot.side* constants.field_length/2) - client.ball[0]) < constants.robot_tag_size + 0.1):
         #     bot.goto((client.ball[0],client.ball[1],o))
         #     bot.kick()
 
-    def dribbling(self, id):  
-        print("foezijfezoijfezoij")      
+    def dribbling(self, id):      
         kick = self.wantToKick(id)
         self.go_to(self.allie(id),x=self.allie(id).position[0],y=self.allie(id).position[1], orientation=self.angleTo(self.allie(id).position, self.ball), kick=kick, power=3, dribble=1)
 
@@ -123,7 +131,6 @@ class ExampleManager(Manager):
 
         for i in range(len(self.order)):
             id = self.order[i]
-            print(id)
             if not hasattr(self.allie(id), "side"): self.allie(id).side = 1 if self.allie(id).position[0] > 0 else -1
             if not hasattr(self.allie(id), "role"): 
                 if i == 0: 
