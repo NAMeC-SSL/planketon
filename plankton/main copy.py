@@ -25,7 +25,7 @@ def rotateVector(v, theta):
 
 
 class ExampleManager(Manager):
-    roles = {"offense": [], "goal": [], "defender": [], "attacker": []}
+    roles = {"goal": [], "defender": [], "attacker": []}
     def allie(self, id):
         """ 
             Get the robot obj with ID
@@ -38,10 +38,18 @@ class ExampleManager(Manager):
         """
         self.initEnv()
 
-        self.offense()
         self.attack()
         self.goal()
         self.defende()
+
+        # for id in self.order:
+        #     if self.allie(id).position is None:continue # check if bot exist
+        #     match self.allie(id).role:
+        #         case 'goal':
+        #             self.goal(id)
+        #         case 'defender':
+        #             self.defende(id)
+        #         case 'attacker': self.attack(id)
 
     def closestAttacker(self):
         minId = -1
@@ -52,18 +60,6 @@ class ExampleManager(Manager):
                 minId = attackerId
                 minDist = d
         return minId
-
-    def offense(self):
-        distToGoal = 1.5
-        id = self.roles['offense'][0]
-        g = self.goalPos(id)
-        v = self.ball - g
-        v = normalize(v) * distToGoal + g
-        self.go_to(self.allie(id) 
-            ,x=v[0]
-            ,y=v[1]
-            ,orientation=self.angleTo(self.allie(id).position
-            ,self.ball))
 
     def attack(self):
         id = self.closestAttacker()
@@ -96,45 +92,11 @@ class ExampleManager(Manager):
         #     bot.goto((client.ball[0],client.ball[1],o))
         #     bot.kick()
 
-    def line_intersection(self, circle_center, circle_radius, line_point1, line_point2):
-        x1, y1 = line_point1
-        x2, y2 = line_point2
-        x0, y0 = circle_center
-        r = circle_radius
-        k, b = np.polyfit([x1, x2], [y1, y2], deg=1)
-        A = k**2 + 1
-        B = 2*k*b - 2*k*y0 - 2*x0
-        C = y0**2 - r**2 + x0**2 - 2*b*y0 + b**2
-        discriminant = B**2 - 4*A*C
-        if discriminant < 0:
-            return None
-        elif discriminant == 0:
-            x = -B / 2 / A
-            y = k * x + b
-            return (x, y)
-        else:
-            x1 = (-B + np.sqrt(discriminant)) / 2 / A
-            y1 = k * x1 + b
-            x2 = (-B - np.sqrt(discriminant)) / 2 / A
-            y2 = k * x2 + b
-            return ((x1, y1), (x2, y2))
-
     def dribbling(self, id):      
         kick = self.wantToKick(id)
-        botInAlignement = False
-        for r in self.robots['enemies']:
-            if r.position is None: continue
-            botInAlignement = botInAlignement or self.line_intersection(
-                r.position, 0.1, self.allie(id).position, self.goalPos(id)
-            ) != None
-        if not botInAlignement:
-            self.go_to(self.allie(id),x=self.allie(id).position[0],y=self.allie(id).position[1], orientation=self.angleTo(self.allie(id).position, self.goalPos(id)), kick=kick, power=3, dribble=1)
-        else:
-            self.go_to(self.allie(id),x=self.allie(id).position[0],y=self.allie(id).position[1], orientation=self.angleTo(self.allie(id).position, self.allie(self.roles["offense"][0]).position), kick=KICK.STRAIGHT_KICK, power=3, dribble=1)
-            #self.roles["attacker"] = []
-        
+        self.go_to(self.allie(id),x=self.allie(id).position[0],y=self.allie(id).position[1], orientation=self.angleTo(self.allie(id).position, self.goalPos(id)), kick=kick, power=3, dribble=1)
 
-    def goalPos(self, id):  
+    def goalPos(self, id):
         return np.array([-self.allie(id).side * self.field['length']/2, 0])
 
     def goToBall(self, id):
@@ -174,11 +136,7 @@ class ExampleManager(Manager):
                 if i == 0: 
                     self.roles['goal'].append(id)
                     self.allie(id).role = 'goal'
-                elif i == len(self.order) - 1: 
-                    self.roles['offense'].append(id)
-                    self.allie(id).role = 'offense'
-                    self.allie(id).status = ''
-                elif i == len(self.order) - 2 or i == len(self.order) - 4: 
+                elif i == len(self.order) - 1 or i == len(self.order) - 2: 
                     self.roles['attacker'].append(id)
                     self.allie(id).role = 'attacker'
                     if self.distToBall(id) < 0.11 :self.allie(id).status = 'dribbling'
