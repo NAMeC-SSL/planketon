@@ -58,9 +58,10 @@ class Manager:
         self.blue_on_positive_half = None
 
         # Requiring to fetch data at least once to set up manager
-        data = self.client.recv_data()
-        if data is None:
-            raise IOError("[MANAGER] Cannot grab first batch of data from server")
+        data = None
+        while data is None:
+            data = self.client.recv_data()
+            print("Waiting for data from CRAbE...")
         self.update_data(data)
 
         signal.signal(signal.SIGINT, handler=self.handler)
@@ -94,7 +95,7 @@ class Manager:
                 self.robots[str_team][number].orientation = np.array(robot["robot"]["orientation"])
 
     def update_data(self, data):
-        print(data)
+        # print(data)
         if "ball" in data:
             self.update_ball(data)
 
@@ -122,7 +123,7 @@ class Manager:
 
     def go_to(self, robot: Robot, x: float, y: float, orientation: float, charge=False, power=0.0, dribble=0.0,
               kick=KICK.NO_KICK) -> bool:
-        p = 3
+        p = 1
 
         Ti = frame_inv(robot_frame(robot))
         target_in_robot = Ti @ np.array([x, y, 1])
