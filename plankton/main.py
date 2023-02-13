@@ -13,7 +13,7 @@ class ExampleManager(Manager):
         self.__goalkeeper = GoalKeeper(self, self.robots["allies"][0], self.field, self.blue_on_positive_half)
 
     def step(self):
-        self.__field_observer.step(self.ball)
+        self.__field_observer.step(self.ball, self.robots["allies"])
         self.__goalkeeper.step(self.__field_observer.get_data())
 
 

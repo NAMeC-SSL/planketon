@@ -2,6 +2,8 @@ from typing import Callable
 
 import numpy as np
 
+from plankton_client import Robot
+
 
 def angle_towards(src: np.array, dst: np.array) -> float:
     """
@@ -47,3 +49,20 @@ def point_in_rectangle(point: np.array, rectangle: dict[str, np.ndarray]):
         rectangle["bottom_right"][0] >= point[0] and rectangle["bottom_right"][1] <= point[1] and \
         rectangle["top_right"][0] >= point[0] and rectangle["top_right"][1] >= point[1] and \
         rectangle["top_left"][0] <= point[0] and rectangle["top_left"][1] >= point[1]
+
+
+def closest_to_target(robots: list[Robot], target: np.array) -> Robot:
+    """
+    Return the point that is the closest to the given destination point
+    """
+    if len(robots) == 1:
+        return robots[0]
+
+    points = [r.position for r in robots]
+
+    # the None coalescing op is required to avoid subtracting to None
+    # replaces None with absurdly far coordinates
+    dist_to_target = lambda xy: np.linalg.norm(target - (xy if xy is not None else np.array([-100, -100])))
+    distances_map = list(map(dist_to_target, points))
+    index_min_dist = min(range(len(distances_map)), key=distances_map.__getitem__)
+    return robots[index_min_dist]
