@@ -43,6 +43,7 @@ def traj_function(a: np.array, b: np.array, general_form=False) -> Callable[[flo
 
 def point_in_rectangle(point: np.array, rectangle: dict[str, np.ndarray]):
     return \
-        (rectangle["bottom_left"] <= point).all() and (point <= rectangle["top_left"]).all() \
-        and \
-        (rectangle["bottom_right"] <= point).all() and (point <= rectangle["top_right"]).all()
+        rectangle["bottom_left"][0] <= point[0] and rectangle["bottom_left"][1] <= point[1] and \
+        rectangle["bottom_right"][0] >= point[0] and rectangle["bottom_right"][1] <= point[1] and \
+        rectangle["top_right"][0] >= point[0] and rectangle["top_right"][1] >= point[1] and \
+        rectangle["top_left"][0] <= point[0] and rectangle["top_left"][1] >= point[1]

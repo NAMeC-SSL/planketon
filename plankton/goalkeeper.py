@@ -55,9 +55,12 @@ class GoalKeeper:
 
         ball_traj = lambda x: ball_traj_params[0] * x + ball_traj_params[1]
         gk_posts_center = self.__GK_SCORE_AREA["center"][0]
-        target = (gk_posts_center, ball_traj(gk_posts_center))
+        target = np.array([gk_posts_center, ball_traj(gk_posts_center)])
+        offset = [0.09, 0.] if self.__on_positive_half else [-0.09, 0.]
+        print(target + offset)
+        # print(target)
 
-        return target, utils.point_in_rectangle(target, self.__GK_SCORE_AREA)
+        return tuple(target), utils.point_in_rectangle(target + offset, self.__GK_SCORE_AREA)
 
     def __limit_to_goalarea(self, x: float, y: float) -> tuple[float, float]:
         new_x, new_y = x, y
@@ -79,10 +82,11 @@ class GoalKeeper:
 
     def step(self, ball_data: dict):
         if ball_data["ball_moving"]:
-            print("Need to block")
             block_ball_coords, need_intercept = self.__intercept_ball_coordinates(ball_data["ball_traj__m_p"])
             if need_intercept:
+                print(f"Before limiter {block_ball_coords}")
                 block_ball_coords = self.__limit_to_goalarea(*block_ball_coords)
+                print(f"After limiter {block_ball_coords}")
                 self.__manager.go_to(
                     self.__robot,
                     x=block_ball_coords[0],
@@ -90,6 +94,7 @@ class GoalKeeper:
                     orientation=utils.angle_towards(self.__robot.position, ball_data["ball_history"][-1])
                 )
             else:
+                print(f"No interception required, going to {self.__GK_SCORE_AREA['center']}")
                 self.__manager.go_to(
                     self.__robot,
                     x=self.__GK_SCORE_AREA["center"][0],

@@ -9,7 +9,6 @@ class ExampleManager(Manager):
 
     def __init__(self, c: Client):
         super().__init__(c)
-        self.client.recv_data()
         self.__field_observer = FieldObserver()
         self.__goalkeeper = GoalKeeper(self, self.robots["allies"][0], self.field, self.blue_on_positive_half)
 
