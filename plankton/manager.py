@@ -55,6 +55,7 @@ class Manager:
 
         self.ball = None
         self.field = None
+        self.blue_on_positive_half = None
 
         signal.signal(signal.SIGINT, handler=self.handler)
 
@@ -99,6 +100,9 @@ class Manager:
 
         if "field" in data:
             self.field = data["field"]
+
+        if "blue_on_positive_half" in data:
+            self.blue_on_positive_half = data["blue_on_positive_half"]
 
     def run(self):
         while self.running:
