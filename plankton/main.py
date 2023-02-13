@@ -1,21 +1,25 @@
 from manager import Manager
-from plankton_client import Client,Command
+from field_observer import FieldObserver
+from goalkeeper import GoalKeeper
+from plankton_client import Client
 from sys import argv
 
+
 class ExampleManager(Manager):
+
+    def __init__(self, c: Client):
+        super().__init__(c)
+        self.client.recv_data()
+        self.__field_observer = FieldObserver()
+        self.__goalkeeper = GoalKeeper(self, self.robots["allies"][0], self.field, self.blue_on_positive_half)
+
     def step(self):
-        print("test")
-        self.go_to(self.allies1, x=0.0, y=0.0, orientation=0.0)
-        # self.go_to(self.allies1, )
-        self.control(self.allies2, forward_velocity=1.0, left_velocity=0.0, angular_velocity=0.0)
-        # self.client.commands.append(Command(id=0, forward_velocity=1.0, angular_velocity=0.0))
-        # self.client.commands.append(Command(id=1, forward_velocity=1.0, angular_velocity=1.0))
-        print(self.ball)
-        print(self.allies1)
+        self.__field_observer.step(self.ball)
+        self.__goalkeeper.step(self.__field_observer.get_data())
 
 
 if __name__ == "__main__":
     is_yellow = len(argv) > 1 and argv[1] == '-y'
     with Client(is_yellow) as client:
-        manager = ExampleManager(client=client)
+        manager = ExampleManager(c=client)
         manager.run()
