@@ -57,6 +57,12 @@ class Manager:
         self.field = None
         self.blue_on_positive_half = None
 
+        # Requiring to fetch data at least once to set up manager
+        data = self.client.recv_data()
+        if data is None:
+            raise IOError("[MANAGER] Cannot grab first batch of data from server")
+        self.update_data(data)
+
         signal.signal(signal.SIGINT, handler=self.handler)
 
     def handler(self, _signum, _frame):
