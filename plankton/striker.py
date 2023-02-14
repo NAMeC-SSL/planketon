@@ -59,15 +59,16 @@ class Striker:
     def step(self, target: np.array):
         ball: np.array = self.__manager.ball
 
-        prepared_to_shoot = np.dot(ball - self.__robot.position, target - ball) >= 0.05  # and np.linalg.norm(ball - self.__robot.position) < 0.8
+        # Compute pos to go to behind ball to aim towards target
+        pre_shoot_pos = self.__compute_preshoot_pos(target=target, ball=ball)
+
+        # Core of the decision between moving to shoot pos, and going for a shoot
+        # True if vec angle from robot to ball is approximately equal to vec angle from ball to target
+        prepared_to_shoot = np.isclose(utils.angle_towards(src=ball, dst=target), utils.angle_towards(self.__robot.position, ball), rtol=np.deg2rad(5))
 
         if not prepared_to_shoot:
-            # Compute pos to go to behind ball to aim towards target
-            pre_shoot_pos = self.__compute_preshoot_pos(target=target, ball=ball)
-            print(pre_shoot_pos)
-            self.__manager.go_to(self.__robot, *pre_shoot_pos)
-
             print("[PRE-SHOOT POS] Placing")
+            self.__manager.go_to(self.__robot, *pre_shoot_pos)
 
         else:
             if np.linalg.norm(ball - self.__robot.position) < 0.15:
