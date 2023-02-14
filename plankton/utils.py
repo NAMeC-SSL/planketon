@@ -66,3 +66,10 @@ def closest_to_target(robots: list[Robot], target: np.array) -> Robot:
     distances_map = list(map(dist_to_target, points))
     index_min_dist = min(range(len(distances_map)), key=distances_map.__getitem__)
     return robots[index_min_dist]
+
+
+def normalize_vec(vec: np.ndarray) -> np.ndarray:
+    # Normalize the vector
+    norm: float = np.linalg.norm(vec)
+    norm = 1 if norm == 0 else norm
+    return vec / norm
