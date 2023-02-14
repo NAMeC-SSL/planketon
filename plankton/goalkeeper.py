@@ -77,9 +77,9 @@ class GoalKeeper:
 
         return new_x, new_y
 
-    def step(self, ball_data: dict):
-        if ball_data["ball_moving"]:
-            block_ball_coords = self.__intercept_ball_coordinates(ball_data["ball_traj__m_p"])
+    def step(self, field_data: dict):
+        if field_data["ball_moving"]:
+            block_ball_coords = self.__intercept_ball_coordinates(field_data["ball_traj__m_p"])
             print(f"Before limiter {block_ball_coords}")
 
             block_ball_coords = self.__limit_to_goalarea(*block_ball_coords)
@@ -89,13 +89,32 @@ class GoalKeeper:
                 self.__robot,
                 x=block_ball_coords[0],
                 y=block_ball_coords[1],
-                orientation=utils.angle_towards(self.__robot.position, ball_data["ball_history"][-1])
+                orientation=utils.angle_towards(self.__robot.position, field_data["ball_history"][-1])
             )
         else:
-            print(f"Not moving, going to {self.__GK_SCORE_AREA['center']}")
+            # Guess where a given robot is going to shoot
+            # TODO: if closest robot is self, run towards ball and shoot away
+
+            # Draw a second point using the closest to ball robot's direction
+            closest_robot_to_ball: Robot = field_data["first_rob_near_ball"]
+            # TODO: which is better ? vec from rob to ball or vec using robot's direction ?
+            p_x = closest_robot_to_ball.position[0] + 2 * np.cos(closest_robot_to_ball.orientation)
+            p_y = closest_robot_to_ball.position[1] + 2 * np.sin(closest_robot_to_ball.orientation)
+
+            predicted_traj: Callable[[float], float] = utils.traj_function(closest_robot_to_ball.position, (p_x, p_y))
+            intercept_y: float = predicted_traj(self.__GK_SCORE_AREA["center"][0])
+
+            # Scale down computed y to avoid a position that would
+            # space the GK too much from its posts' center
+            intercept_y *= 0.3
+
+            # Apply limiter
+            x, y = self.__limit_to_goalarea(self.__GK_SCORE_AREA["center"][0], intercept_y)
+
+            print(f"Predicting shoot trajectory")
             self.__manager.go_to(
                 self.__robot,
-                x=self.__GK_SCORE_AREA["center"][0],
-                y=self.__GK_SCORE_AREA["center"][1],
-                orientation=utils.angle_towards(self.__robot.position, ball_data["ball_history"][-1])
+                x,
+                y,
+                orientation=utils.angle_towards(self.__robot.position, field_data["ball_history"][-1])
             )
