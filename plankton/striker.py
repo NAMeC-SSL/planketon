@@ -78,7 +78,7 @@ class Striker:
 
         # Core of the decision between moving to shoot pos, and going for a shoot
         # True if vec angle from robot to ball is approximately equal to vec angle from ball to target
-        prepared_to_shoot = np.isclose(utils.angle_towards(src=ball, dst=target), utils.angle_towards(self.__robot.position, ball), rtol=np.deg2rad(5))
+        prepared_to_shoot = np.isclose(utils.angle_towards(src=ball, dst=target), utils.angle_towards(self.__robot.position, ball), rtol=np.deg2rad(15))
 
         if not prepared_to_shoot:
             print("[PRE-SHOOT POS] Placing")
@@ -87,8 +87,8 @@ class Striker:
         else:
             if np.linalg.norm(ball - self.__robot.position) < 0.15:
                 print("Kicking ball")
-                # TODO: wrap around an async timer
-                self.__manager.go_to(self.__robot, *ball, utils.angle_towards(src=self.__robot.position, dst=target), kick=KICK.STRAIGHT_KICK, charge=True, power=4)
+                # TODO: wrap around an async timer to not trigger multiple kicks over a second
+                self.__manager.go_to(self.__robot, *ball, utils.angle_towards(src=self.__robot.position, dst=target), kick=KICK.STRAIGHT_KICK, charge=True, dribble=2, power=4)
             else:
                 # Run towards ball
                 print("Going to ball")
