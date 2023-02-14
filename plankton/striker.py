@@ -78,4 +78,5 @@ class Striker:
             else:
                 # Run towards ball
                 print("Going to ball")
-                self.__manager.go_to(self.__robot, *ball, utils.angle_towards(src=self.__robot.position, dst=target))
+                vec_forward_ball = utils.normalize_vec(ball - self.__robot.position)
+                self.__manager.go_to(self.__robot, *(ball + vec_forward_ball), utils.angle_towards(src=self.__robot.position, dst=target))
