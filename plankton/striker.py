@@ -5,6 +5,7 @@ import numpy as np
 from field_observer import FieldObserver
 import utils
 from manager import Manager
+from goalkeeper import determine_goal_area
 from plankton_client import Robot, KICK
 
 
@@ -31,7 +32,7 @@ class Striker:
         position_pre_shoot_angle = utils.angle_towards(position_pre_shoot, target)
         return position_pre_shoot[0], position_pre_shoot[1], position_pre_shoot_angle
 
-    def determine_shoot_target_to_goal(self, goal_posts: np.ndarray[np.ndarray], enemy_robs: list[Robot]):
+    def __determine_shoot_target_to_goal(self, enemy_goal_posts: np.ndarray[np.ndarray], enemy_gk: Robot):
         """
         Computes a point towards which the ball should go
 
@@ -42,21 +43,34 @@ class Striker:
         Returns :
             A 2-dimensional np array, the coordinates of the target to aim towards
         """
-        enemy_gk: Robot = FieldObserver.guess_goal_keeper(enemy_robs, goal_posts)
-        wanted_post: np.array = FieldObserver.get_furthest_post_of_gk(enemy_gk, goal_posts)
+
+        # Find which post the enemy goalkeeper is farthest to
+        wanted_post: np.array = enemy_goal_posts[0]
+        if np.linalg.norm(enemy_goal_posts[0] - enemy_gk.position) >= np.linalg.norm(enemy_goal_posts[1] - enemy_gk.position):
+            wanted_post: np.array = enemy_goal_posts[1]
 
         # Apply a small offset to the wanted post
         # # TODO: another offset to put the target inside the goal posts
-        gk_posts_mid: np.array = (goal_posts[0] + goal_posts[1]) / 2
+        gk_posts_mid: np.array = (enemy_goal_posts[0] + enemy_goal_posts[1]) / 2
         vec_post_to_mid: np.array = gk_posts_mid - wanted_post
-
         vec_post_to_mid = utils.normalize_vec(vec_post_to_mid)
 
-        target = wanted_post + vec_post_to_mid
+        target = wanted_post + vec_post_to_mid * 1.5
 
         return target
 
-    def step(self, target: np.array):
+    def step(self, field: dict, is_blue_x_positive: bool, enemy_gk: Robot):
+
+        # Compute target
+        # -- Note : I put our team's GK for testing here, replace with 'not is_blue_x_positive' on real settings
+        enemy_gk_score_area: dict[str, np.ndarray] = determine_goal_area(field, is_blue_x_positive)
+
+        # Determine the goal posts of the enemy
+        # -- Putting top right and bottom right wouldn't work if we switch sides
+        # -- but eh, it's precise enough anyway
+        enemy_gk_posts = np.array([enemy_gk_score_area["top_right"]] + [enemy_gk_score_area["bottom_right"]])
+        target: np.ndarray = self.__determine_shoot_target_to_goal(enemy_gk_posts, enemy_gk)
+
         ball: np.array = self.__manager.ball
 
         # Compute pos to go to behind ball to aim towards target

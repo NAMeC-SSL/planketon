@@ -15,9 +15,9 @@ class ExampleManager(Manager):
         self.__striker = Striker(self, self.robots["allies"][4])
 
     def step(self):
-        # self.__field_observer.step(self.ball, self.robots["allies"])
-        # self.__goalkeeper.step(self.__field_observer.get_data())
-        self.__striker.step(target=(-6, 0.))
+        self.__field_observer.step(self.ball, self.robots, self.field, self.blue_on_positive_half)
+        self.__goalkeeper.step(self.__field_observer.get_data())
+        self.__striker.step(self.field, self.blue_on_positive_half, self.__field_observer.get_data()["goalkeepers"]["allies"])
 
 
 if __name__ == "__main__":
