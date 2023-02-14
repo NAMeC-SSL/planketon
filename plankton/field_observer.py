@@ -1,7 +1,7 @@
 import numpy as np
 
 import utils
-from plankton.goalkeeper import determine_goal_area
+from goalkeeper import determine_goal_area
 from plankton_client import Robot
 
 
@@ -36,8 +36,8 @@ class FieldObserver:
         self.__closest_rob_to_ball = utils.closest_to_target(robots, target=ball)
 
     def __guess_goal_keepers(self, robots_dict: dict[str, list[Robot]], field: dict, is_blue_x_positive: bool):
-        ally_gk = utils.closest_to_target(robots_dict["allies"], determine_goal_area(field, is_blue_x_positive))
-        enemy_gk = utils.closest_to_target(robots_dict["enemies"], determine_goal_area(field, not is_blue_x_positive))
+        ally_gk = utils.closest_to_target(robots_dict["allies"], determine_goal_area(field, is_blue_x_positive)["center"])
+        enemy_gk = utils.closest_to_target(robots_dict["enemies"], determine_goal_area(field, not is_blue_x_positive)["center"])
         self.__guessed_goalkeepers = {
             "allies": ally_gk,
             "enemies": enemy_gk
