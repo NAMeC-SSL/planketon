@@ -29,7 +29,7 @@ class Striker:
 
         # Change the vector's origin to start from the ball
         position_pre_shoot: np.array = ball + target_to_ball
-        position_pre_shoot_angle = utils.angle_towards(position_pre_shoot, target)
+        position_pre_shoot_angle = utils.angle_towards(position_pre_shoot, ball)
         return position_pre_shoot[0], position_pre_shoot[1], position_pre_shoot_angle
 
     def __determine_shoot_target_to_goal(self, enemy_goal_posts: np.ndarray[np.ndarray], enemy_gk: Robot):
@@ -78,19 +78,19 @@ class Striker:
 
         # Core of the decision between moving to shoot pos, and going for a shoot
         # True if vec angle from robot to ball is approximately equal to vec angle from ball to target
-        prepared_to_shoot = np.isclose(utils.angle_towards(src=ball, dst=target), utils.angle_towards(self.__robot.position, ball), rtol=np.deg2rad(15))
+        prepared_to_shoot = np.isclose(utils.angle_towards(src=ball, dst=target), utils.angle_towards(self.__robot.position, ball), rtol=np.deg2rad(30))
 
         if not prepared_to_shoot:
-            print("[PRE-SHOOT POS] Placing")
+            print("[STRIKER - PLACEMENT] Placing")
             self.__manager.go_to(self.__robot, *pre_shoot_pos)
 
         else:
-            if np.linalg.norm(ball - self.__robot.position) < 0.15:
-                print("Kicking ball")
+            if np.linalg.norm(ball - self.__robot.position) < 0.21:
+                print("[STRIKER - KICK] Kicking ball")
                 # TODO: wrap around an async timer to not trigger multiple kicks over a second
                 self.__manager.go_to(self.__robot, *ball, utils.angle_towards(src=self.__robot.position, dst=target), kick=KICK.STRAIGHT_KICK, charge=True, dribble=2, power=4)
             else:
                 # Run towards ball
-                print("Going to ball")
+                print("[STRIKER - RUSHING] Going towards the ball")
                 vec_forward_ball = utils.normalize_vec(ball - self.__robot.position)
                 self.__manager.go_to(self.__robot, *(ball + vec_forward_ball), utils.angle_towards(src=self.__robot.position, dst=target))
