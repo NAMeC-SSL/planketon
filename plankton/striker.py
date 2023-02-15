@@ -10,6 +10,17 @@ from plankton_client import Robot, KICK
 
 
 class Striker:
+    # Minimum distance for the robot to consider shooting instead of running towards the ball
+    SHOOT_MIN_DIST_FROM_BALL = 0.29
+    # Maximum degree of difference between wanted shoot position and real position
+    DEG_DIFF_FOR_PLACEMENT = 15
+    # Multiplier for the vector that determines where to shoot the ball to score
+    # The higher it is, the closer to the center of the goal area the target will be
+    # (a value too high might make it go outside the goal area, so watch out)
+    GOAL_TARGET_MULTIPLIER = 1.5
+    # Multiplies the normalized vector determining how far should we be from
+    # the ball before commencing run & shoot sequences
+    DIST_PLACEMENT_BEHIND_BALL_MULTIPLIER = 1
 
     def __init__(self, manager: Manager, robot: Robot):
         self.__manager: Manager = manager
@@ -28,11 +39,11 @@ class Striker:
         target_to_ball = utils.normalize_vec(target_to_ball)
 
         # Change the vector's origin to start from the ball
-        position_pre_shoot: np.array = ball + target_to_ball
+        position_pre_shoot: np.array = ball + target_to_ball * Striker.DIST_PLACEMENT_BEHIND_BALL_MULTIPLIER
         position_pre_shoot_angle = utils.angle_towards(position_pre_shoot, ball)
         return position_pre_shoot[0], position_pre_shoot[1], position_pre_shoot_angle
 
-    def __determine_shoot_target_to_goal(self, enemy_goal_posts: np.ndarray[np.ndarray], enemy_gk: Robot):
+    def __determine_shoot_target_to_goal(self, enemy_goal_posts: np.ndarray[np.ndarray], enemy_gk: Robot) -> np.ndarray:
         """
         Computes a point towards which the ball should go
 
@@ -44,18 +55,19 @@ class Striker:
             A 2-dimensional np array, the coordinates of the target to aim towards
         """
 
-        # Find which post the enemy goalkeeper is farthest to
+        # Find which post the enemy goalkeeper is farthest from
         wanted_post: np.array = enemy_goal_posts[0]
         if np.linalg.norm(enemy_goal_posts[0] - enemy_gk.position) >= np.linalg.norm(enemy_goal_posts[1] - enemy_gk.position):
             wanted_post: np.array = enemy_goal_posts[1]
 
+        gk_posts_mid: np.array = (enemy_goal_posts[0] + enemy_goal_posts[1]) / 2
+
         # Apply a small offset to the wanted post
         # # TODO: another offset to put the target inside the goal posts
-        gk_posts_mid: np.array = (enemy_goal_posts[0] + enemy_goal_posts[1]) / 2
         vec_post_to_mid: np.array = gk_posts_mid - wanted_post
         vec_post_to_mid = utils.normalize_vec(vec_post_to_mid)
 
-        target = wanted_post + vec_post_to_mid * 1.5
+        target: np.array = wanted_post + vec_post_to_mid * Striker.GOAL_TARGET_MULTIPLIER
 
         return target
 
@@ -70,7 +82,6 @@ class Striker:
         # -- but eh, it's precise enough anyway
         enemy_gk_posts = np.array([enemy_gk_score_area["top_right"]] + [enemy_gk_score_area["bottom_right"]])
         target: np.ndarray = self.__determine_shoot_target_to_goal(enemy_gk_posts, enemy_gk)
-
         ball: np.array = self.__manager.ball
 
         # Compute pos to go to behind ball to aim towards target
@@ -78,14 +89,14 @@ class Striker:
 
         # Core of the decision between moving to shoot pos, and going for a shoot
         # True if vec angle from robot to ball is approximately equal to vec angle from ball to target
-        prepared_to_shoot = np.isclose(utils.angle_towards(src=ball, dst=target), utils.angle_towards(self.__robot.position, ball), rtol=np.deg2rad(30))
+        prepared_to_shoot = np.isclose(utils.angle_towards(src=ball, dst=target), utils.angle_towards(self.__robot.position, ball), rtol=np.deg2rad(Striker.DEG_DIFF_FOR_PLACEMENT))
 
         if not prepared_to_shoot:
             print("[STRIKER - PLACEMENT] Placing")
             self.__manager.go_to(self.__robot, *pre_shoot_pos)
 
         else:
-            if np.linalg.norm(ball - self.__robot.position) < 0.21:
+            if np.linalg.norm(ball - self.__robot.position) < Striker.SHOOT_MIN_DIST_FROM_BALL:
                 print("[STRIKER - KICK] Kicking ball")
                 # TODO: wrap around an async timer to not trigger multiple kicks over a second
                 self.__manager.go_to(self.__robot, *ball, utils.angle_towards(src=self.__robot.position, dst=target), kick=KICK.STRAIGHT_KICK, charge=True, dribble=2, power=4)
