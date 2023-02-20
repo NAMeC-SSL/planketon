@@ -83,7 +83,6 @@ class Manager:
                 self.robots[str_team][number].orientation = np.array(robot["robot"]["orientation"])
 
     def update_data(self, data):
-        print(data)
         if "ball" in data:
             self.update_ball(data)
 

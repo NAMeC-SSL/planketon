@@ -36,7 +36,6 @@ class Command:
 
     def toJson(self):
         if self.kick == KICK.STRAIGHT_KICK:
-            print("sa")
             return {
                 "Command": {
                     "id": self.id,
@@ -116,7 +115,6 @@ class Client:
         for command in self.commands:
             data.append(command.toJson())
         data_send = json.dumps(data)
-        print(data_send)
         self.send_socket.sendall(data_send.encode())
 
     def recv_data(self):
