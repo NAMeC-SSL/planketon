@@ -10,6 +10,8 @@ from plankton_client import Robot, KICK
 
 
 class Striker:
+    # Multiplies the vector
+    MULT_GO_BEHIND = 1.5
     # Maximum difference of degrees of offset to consider that we're aiming towards the target
     DEG_DIFF_TARGET_ALIGN = 10
     # Minimum distance for the robot to consider shooting instead of running towards the ball
@@ -21,7 +23,7 @@ class Striker:
     # Multiplier for the vector that determines where to shoot the ball to score
     # The higher it is, the closer to the center of the goal area the target will be
     # (a value too high might make it go outside the goal area, so watch out)
-    GOAL_TARGET_MULTIPLIER = 1.5
+    GOAL_TARGET_MULTIPLIER = 0.8
     # Multiplies the normalized vector determining how far should we be from
     # the ball before commencing run & shoot sequences
     DIST_PLACEMENT_BEHIND_BALL_MULTIPLIER = 1
@@ -30,7 +32,7 @@ class Striker:
         self.__manager: Manager = manager
         self.__robot = robot
 
-    def __compute_preshoot_pos(self, target: np.array, ball: np.array) -> tuple[float, float, float]:
+    def __compute_preshoot_pos(self, target: np.array, ball: np.array) -> np.array:
         """
         Compute the position in (x, y) to where the robot should position itself
         to be just in front of the ball, aiming towards a certain position.
@@ -43,8 +45,8 @@ class Striker:
 
         # Change the vector's origin to start from the ball
         position_pre_shoot: np.array = ball + target_to_ball * Striker.DIST_PLACEMENT_BEHIND_BALL_MULTIPLIER
-        position_pre_shoot_angle = utils.angle_towards(position_pre_shoot, ball)
-        return position_pre_shoot[0], position_pre_shoot[1], position_pre_shoot_angle
+        position_pre_shoot_angle = utils.angle_towards(self.__robot.position, ball)
+        return np.array([position_pre_shoot[0], position_pre_shoot[1], position_pre_shoot_angle])
 
     def __determine_shoot_target_to_goal(self, enemy_goal_posts: np.ndarray[np.ndarray], enemy_gk: Robot) -> np.ndarray:
         """
@@ -71,7 +73,7 @@ class Striker:
         vec_post_to_mid = utils.normalize_vec(vec_post_to_mid)
 
         target: np.array = wanted_post + vec_post_to_mid * Striker.GOAL_TARGET_MULTIPLIER
-
+        print(target)
         return target
 
     def step(self, field: dict, is_blue_x_positive: bool, enemy_gk: Robot):
@@ -89,16 +91,28 @@ class Striker:
         target: np.ndarray = self.__determine_shoot_target_to_goal(enemy_gk_posts, enemy_gk)
 
         # Compute pos to go to behind ball to aim towards target
-        pre_shoot_pos = self.__compute_preshoot_pos(target=target, ball=ball)
+        pre_shoot_pos: np.array = self.__compute_preshoot_pos(target=target, ball=ball)
 
         # Core of the decision between moving to shoot pos, and going for a shoot
         # True if vec angle from robot to ball is approximately equal to vec angle from ball to target
-        prepared_to_shoot = np.isclose(utils.angle_towards(src=ball, dst=target), utils.angle_towards(self.__robot.position, ball), rtol=np.deg2rad(Striker.DEG_DIFF_FOR_PLACEMENT))
+
+        angle_ball_to_target = utils.angle_towards(src=ball, dst=target)
+        angle_robpos_to_ball = utils.angle_towards(self.__robot.position, ball)
+        angle_diff_shoot_pos: float = np.rad2deg(abs(angle_ball_to_target - angle_robpos_to_ball))
+
+        prepared_to_shoot = angle_diff_shoot_pos <= Striker.DEG_DIFF_FOR_PLACEMENT
 
         # Decision taker for the Striker
         if not prepared_to_shoot:
-            print("[STRIKER - PLACEMENT] Placing")
-            self.__manager.go_to(self.__robot, *pre_shoot_pos)
+            if angle_diff_shoot_pos >= 90:  # TODO: constant-ize
+                # Move pre-shoot pos a little further to allow going behind ball
+                far_behind_ball = pre_shoot_pos * Striker.MULT_GO_BEHIND
+                print("[STRIKER - GO BEHIND BALL] Getting behind ball")
+                self.__manager.go_to(self.__robot, *far_behind_ball)
+
+            else:
+                print("[STRIKER - CLOSE PLACEMENT] Placing")
+                self.__manager.go_to(self.__robot, *pre_shoot_pos)
 
         else:
             # If we're close to the ball
