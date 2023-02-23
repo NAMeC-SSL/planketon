@@ -10,14 +10,17 @@ from plankton_client import Robot, KICK
 
 
 class Striker:
+    # Determines how much the angle difference should be to consider
+    # that robot is "behind" a given position
+    DEG_DIFF_GO_BEHIND = 80
     # Multiplies the vector
-    MULT_GO_BEHIND = 1.5
+    MULT_GO_BEHIND = 2
     # Maximum difference of degrees of offset to consider that we're aiming towards the target
     DEG_DIFF_TARGET_ALIGN = 10
     # Minimum distance for the robot to consider shooting instead of running towards the ball
     SHOOT_MIN_DIST_FROM_BALL = 0.29
     # If distance from ball is inferior to k, we consider that we currently have the ball
-    DIST_HAS_BALL = 0.11
+    DIST_HAS_BALL = 0.115
     # Maximum degree of difference between wanted shoot position and real position
     DEG_DIFF_FOR_PLACEMENT = 15
     # Multiplier for the vector that determines where to shoot the ball to score
@@ -26,7 +29,7 @@ class Striker:
     GOAL_TARGET_MULTIPLIER = 0.8
     # Multiplies the normalized vector determining how far should we be from
     # the ball before commencing run & shoot sequences
-    DIST_PLACEMENT_BEHIND_BALL_MULTIPLIER = 1
+    DIST_PLACEMENT_BEHIND_BALL_MULTIPLIER = 1  # TODO: doesn't work, fix for negative coordinates vector
 
     def __init__(self, manager: Manager, robot: Robot):
         self.__manager: Manager = manager
@@ -104,9 +107,10 @@ class Striker:
 
         # Decision taker for the Striker
         if not prepared_to_shoot:
-            if angle_diff_shoot_pos >= 90:  # TODO: constant-ize
+            if angle_diff_shoot_pos >= Striker.DEG_DIFF_GO_BEHIND:
                 # Move pre-shoot pos a little further to allow going behind ball
-                far_behind_ball = pre_shoot_pos * Striker.MULT_GO_BEHIND
+                far_behind_ball = pre_shoot_pos * Striker.DIST_PLACEMENT_BEHIND_BALL_MULTIPLIER
+                print(f"{pre_shoot_pos} | {far_behind_ball}")
                 print("[STRIKER - GO BEHIND BALL] Getting behind ball")
                 self.__manager.go_to(self.__robot, *far_behind_ball)
 
@@ -123,7 +127,7 @@ class Striker:
                 # If we can consider that we possess the ball
                 if has_ball:
                     aim_angle_accurate = \
-                        abs(utils.angle_towards(src=self.__robot.position, dst=target)) - abs(self.__robot.orientation) < np.deg2rad(Striker.DEG_DIFF_TARGET_ALIGN)
+                        abs(abs(utils.angle_towards(src=self.__robot.position, dst=target)) - abs(self.__robot.orientation)) < np.deg2rad(Striker.DEG_DIFF_TARGET_ALIGN)
 
                     small_vec_forward = utils.normalize_vec(target - self.__robot.position) * 0.4
 
@@ -147,5 +151,4 @@ class Striker:
             # Otherwise run towards ball
             else:
                 print("[STRIKER - RUSHING] Going towards the ball")
-                vec_forward_ball = utils.normalize_vec(ball - self.__robot.position)
-                self.__manager.go_to(self.__robot, *(ball + vec_forward_ball), utils.angle_towards(src=self.__robot.position, dst=target))
+                self.__manager.go_to(self.__robot, *ball, utils.angle_towards(src=self.__robot.position, dst=target))
