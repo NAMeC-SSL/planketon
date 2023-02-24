@@ -20,13 +20,13 @@ class Striker:
     # Minimum distance for the robot to consider shooting instead of running towards the ball
     SHOOT_MIN_DIST_FROM_BALL = 0.29
     # If distance from ball is inferior to k, we consider that we currently have the ball
-    DIST_HAS_BALL = 0.095
+    DIST_HAS_BALL = 0.12  # IRL : 0.095
     # Maximum degree of difference between wanted shoot position and real position
     DEG_DIFF_FOR_PLACEMENT = 15
     # Multiplier for the vector that determines where to shoot the ball to score
     # The higher it is, the closer to the center of the goal area the target will be
     # (a value too high might make it go outside the goal area, so watch out)
-    GOAL_TARGET_MULTIPLIER = 0.8
+    GOAL_TARGET_MULTIPLIER = 1
     # Multiplies the normalized vector determining how far should we be from
     # the ball before commencing run & shoot sequences
     DIST_PLACEMENT_BEHIND_BALL_MULTIPLIER = 1  # TODO: doesn't work, fix for negative coordinates vector
@@ -63,9 +63,15 @@ class Striker:
             A 2-dimensional np array, the coordinates of the target to aim towards
         """
 
+        # funniest indent ever for a py program
+        enemy_gk_position = \
+            enemy_gk.position \
+            if enemy_gk not in self.__manager.robots["allies"] and enemy_gk.id != self.__robot.id \
+            else [0., 1.]  # TODO: find a better suited ghost point
+
         # Find which post the enemy goalkeeper is farthest from
         wanted_post: np.array = enemy_goal_posts[0]
-        if np.linalg.norm(enemy_goal_posts[0] - enemy_gk.position) >= np.linalg.norm(enemy_goal_posts[1] - enemy_gk.position):
+        if np.linalg.norm(enemy_goal_posts[0] - enemy_gk.position) >= np.linalg.norm(enemy_goal_posts[1] - enemy_gk_position):
             wanted_post: np.array = enemy_goal_posts[1]
 
         gk_posts_mid: np.array = (enemy_goal_posts[0] + enemy_goal_posts[1]) / 2
@@ -104,7 +110,7 @@ class Striker:
         angle_diff_shoot_pos: float = np.rad2deg(abs(angle_ball_to_target - angle_robpos_to_ball))
 
         prepared_to_shoot = angle_diff_shoot_pos <= Striker.DEG_DIFF_FOR_PLACEMENT
-
+        print(f"ANGLE DIFF SHOOT POS : {angle_diff_shoot_pos}")
         # Decision taker for the Striker
         if not prepared_to_shoot:
             if angle_diff_shoot_pos >= Striker.DEG_DIFF_GO_BEHIND:
