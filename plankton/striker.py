@@ -12,7 +12,7 @@ from plankton_client import Robot, KICK
 class Striker:
     # Determines how much the angle difference should be to consider
     # that robot is "behind" a given position
-    DEG_DIFF_GO_BEHIND = 80
+    DEG_DIFF_GO_BEHIND = 100
     # Multiplies the vector
     MULT_GO_BEHIND = 2
     # Maximum difference of degrees of offset to consider that we're aiming towards the target
@@ -20,7 +20,7 @@ class Striker:
     # Minimum distance for the robot to consider shooting instead of running towards the ball
     SHOOT_MIN_DIST_FROM_BALL = 0.29
     # If distance from ball is inferior to k, we consider that we currently have the ball
-    DIST_HAS_BALL = 0.115
+    DIST_HAS_BALL = 0.095
     # Maximum degree of difference between wanted shoot position and real position
     DEG_DIFF_FOR_PLACEMENT = 15
     # Multiplier for the vector that determines where to shoot the ball to score
@@ -142,13 +142,14 @@ class Striker:
                         # TODO: wrap kick around an async timer to not trigger multiple kicks over a second
                         self.__manager.go_to(self.__robot, *(self.__robot.position + small_vec_forward),
                                              utils.angle_towards(src=self.__robot.position, dst=target),
-                                             charge=True, dribble=2, kick=KICK.STRAIGHT_KICK, power=6)
+                                             charge=True, kick=KICK.STRAIGHT_KICK   , power=5)
                 # Otherwise, go grab the ball
                 else:
                     print("[STRIKER - GRAB] Grabbing ball")
-                    self.__manager.go_to(self.__robot, *ball, utils.angle_towards(src=self.__robot.position, dst=ball))
+                    self.__manager.go_to(self.__robot, *ball, utils.angle_towards(src=self.__robot.position, dst=ball),
+                                         charge=True, dribble=2)
 
             # Otherwise run towards ball
             else:
                 print("[STRIKER - RUSHING] Going towards the ball")
-                self.__manager.go_to(self.__robot, *ball, utils.angle_towards(src=self.__robot.position, dst=target))
+                self.__manager.go_to(self.__robot, *ball, utils.angle_towards(src=self.__robot.position, dst=ball))
