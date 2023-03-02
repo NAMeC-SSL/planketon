@@ -6,7 +6,9 @@ from field_observer import FieldObserver
 import utils
 from manager import Manager
 from goalkeeper import determine_goal_area
+from state_logger import StateLogger
 from plankton_client import Robot, KICK
+from enum import Enum
 
 
 class Striker:
@@ -31,9 +33,21 @@ class Striker:
     # the ball before commencing run & shoot sequences
     DIST_PLACEMENT_BEHIND_BALL_MULTIPLIER = 1
 
+    # Defining all possible states of the striker
+    states = Enum('StrikerState', ['GO_BEHIND_BALL', 'CLOSE_PLACEMENT', 'ALIGN', 'KICK', 'GRAB', 'RUSH'])
+    states_representations = {
+        states.GO_BEHIND_BALL: "Getting behind ball",
+        states.CLOSE_PLACEMENT: "Placing on shoot position",
+        states.ALIGN: "Aligning angle towards target",
+        states.KICK: "Kicking ball",
+        states.GRAB: "Grabbing ball",
+        states.RUSH: "Going towards the ball",
+    }
+
     def __init__(self, manager: Manager, robot: Robot):
         self.__manager: Manager = manager
         self.__robot = robot
+        self.__state_logger = StateLogger('STRIKER', Striker.states_representations)
 
     def __compute_preshoot_pos(self, target: np.array, ball: np.array) -> np.array:
         """
@@ -115,11 +129,13 @@ class Striker:
             if angle_diff_shoot_pos >= Striker.DEG_DIFF_GO_BEHIND:
                 # Move pre-shoot pos a little further to allow going behind ball
                 far_behind_ball = pre_shoot_pos * Striker.DIST_PLACEMENT_BEHIND_BALL_MULTIPLIER
-                print("[STRIKER - GO BEHIND BALL] Getting behind ball")
+                # print("[STRIKER - GO BEHIND BALL] Getting behind ball")
+                self.__state_logger.update_state(Striker.states.GO_BEHIND_BALL)
                 self.__manager.go_to(self.__robot, *far_behind_ball)
 
             else:
-                print("[STRIKER - CLOSE PLACEMENT] Placing")
+                # print("[STRIKER - CLOSE PLACEMENT] Placing")
+                self.__state_logger.update_state(Striker.states.CLOSE_PLACEMENT)
                 self.__manager.go_to(self.__robot, *pre_shoot_pos)
 
         else:
@@ -137,23 +153,29 @@ class Striker:
 
                     # If we're not correctly aiming towards the target (+- a certain delta)
                     if not aim_angle_accurate:
-                        print("[STRIKER - ALIGN] Aligning angle towards target")
+                        # print("[STRIKER - ALIGN] Aligning angle towards target")
+                        self.__state_logger.update_state(Striker.states.ALIGN)
                         self.__manager.go_to(self.__robot, *self.__robot.position,
                                              utils.angle_towards(src=self.__robot.position, dst=target))
                     # Otherwise we shoot
                     else:
-                        print("[STRIKER - KICK] Kicking ball")
+                        # print("[STRIKER - KICK] Kicking ball")
+                        self.__state_logger.update_state(Striker.states.KICK)
                         # TODO: wrap kick around an async timer to not trigger multiple kicks over a second
                         self.__manager.go_to(self.__robot, *(self.__robot.position + small_vec_forward),
                                              utils.angle_towards(src=self.__robot.position, dst=target),
-                                             charge=True, kick=KICK.STRAIGHT_KICK   , power=5)
+                                             charge=True, kick=KICK.STRAIGHT_KICK, power=5)
                 # Otherwise, go grab the ball
                 else:
-                    print("[STRIKER - GRAB] Grabbing ball")
+                    # print("[STRIKER - GRAB] Grabbing ball")
+                    self.__state_logger.update_state(Striker.states.GRAB)
                     self.__manager.go_to(self.__robot, *ball, utils.angle_towards(src=self.__robot.position, dst=ball),
                                          charge=True, dribble=2)
 
             # Otherwise run towards ball
             else:
-                print("[STRIKER - RUSHING] Going towards the ball")
+                # print("[STRIKER - RUSH] Going towards the ball")
+                self.__state_logger.update_state(Striker.states.RUSH)
                 self.__manager.go_to(self.__robot, *ball, utils.angle_towards(src=self.__robot.position, dst=ball))
+
+        self.__state_logger.display_state()
