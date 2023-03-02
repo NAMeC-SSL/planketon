@@ -116,7 +116,7 @@ class Client:
         for command in self.commands:
             data.append(command.toJson())
         data_send = json.dumps(data)
-        print(data_send)
+        # print(data_send)
         self.send_socket.sendall(data_send.encode())
 
     def recv_data(self):

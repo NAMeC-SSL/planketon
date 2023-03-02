@@ -29,7 +29,7 @@ class Striker:
     GOAL_TARGET_MULTIPLIER = 1
     # Multiplies the normalized vector determining how far should we be from
     # the ball before commencing run & shoot sequences
-    DIST_PLACEMENT_BEHIND_BALL_MULTIPLIER = 1  # TODO: doesn't work, fix for negative coordinates vector
+    DIST_PLACEMENT_BEHIND_BALL_MULTIPLIER = 1
 
     def __init__(self, manager: Manager, robot: Robot):
         self.__manager: Manager = manager
@@ -82,7 +82,6 @@ class Striker:
         vec_post_to_mid = utils.normalize_vec(vec_post_to_mid)
 
         target: np.array = wanted_post + vec_post_to_mid * Striker.GOAL_TARGET_MULTIPLIER
-        print(target)
         return target
 
     def step(self, field: dict, is_blue_x_positive: bool, enemy_gk: Robot):
@@ -90,7 +89,7 @@ class Striker:
 
         # Compute target
         # -- Note : I put our team's GK for testing here, replace with 'not is_blue_x_positive' on real settings
-        enemy_gk_score_area: dict[str, np.ndarray] = determine_goal_area(field, is_blue_x_positive)
+        enemy_gk_score_area: dict[str, np.ndarray] = determine_goal_area(field, not is_blue_x_positive)
 
         # Determine the goal posts of the enemy
         # -- Putting top right and bottom right wouldn't work if we switch sides
@@ -110,13 +109,12 @@ class Striker:
         angle_diff_shoot_pos: float = np.rad2deg(abs(angle_ball_to_target - angle_robpos_to_ball))
 
         prepared_to_shoot = angle_diff_shoot_pos <= Striker.DEG_DIFF_FOR_PLACEMENT
-        print(f"ANGLE DIFF SHOOT POS : {angle_diff_shoot_pos}")
+
         # Decision taker for the Striker
         if not prepared_to_shoot:
             if angle_diff_shoot_pos >= Striker.DEG_DIFF_GO_BEHIND:
                 # Move pre-shoot pos a little further to allow going behind ball
                 far_behind_ball = pre_shoot_pos * Striker.DIST_PLACEMENT_BEHIND_BALL_MULTIPLIER
-                print(f"{pre_shoot_pos} | {far_behind_ball}")
                 print("[STRIKER - GO BEHIND BALL] Getting behind ball")
                 self.__manager.go_to(self.__robot, *far_behind_ball)
 
