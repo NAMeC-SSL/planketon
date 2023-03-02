@@ -19,5 +19,5 @@ class StateLogger:
 
     def display_state(self):
         if not self.displayed_once:
-            print(f"[{self.name} - {self.current_state}] {self.states_reprs[self.current_state]}")
+            print(f"[{self.name} - {str(self.current_state).split('.')[-1]:>14}] {self.states_reprs[self.current_state]}")
             self.displayed_once = True

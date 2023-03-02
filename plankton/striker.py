@@ -1,14 +1,12 @@
-from builtins import classmethod
+from enum import Enum
 
 import numpy as np
 
-from field_observer import FieldObserver
 import utils
-from manager import Manager
 from goalkeeper import determine_goal_area
-from state_logger import StateLogger
+from manager import Manager
 from plankton_client import Robot, KICK
-from enum import Enum
+from state_logger import StateLogger
 
 
 class Striker:
@@ -34,10 +32,10 @@ class Striker:
     DIST_PLACEMENT_BEHIND_BALL_MULTIPLIER = 1
 
     # Defining all possible states of the striker
-    states = Enum('StrikerState', ['GO_BEHIND_BALL', 'CLOSE_PLACEMENT', 'ALIGN', 'KICK', 'GRAB', 'RUSH'])
+    states = Enum('StrikerState', ['GO_BEHIND_BALL', 'PLACEMENT', 'ALIGN', 'KICK', 'GRAB', 'RUSH'])
     states_representations = {
         states.GO_BEHIND_BALL: "Getting behind ball",
-        states.CLOSE_PLACEMENT: "Placing on shoot position",
+        states.PLACEMENT: "Placing on shoot position",
         states.ALIGN: "Aligning angle towards target",
         states.KICK: "Kicking ball",
         states.GRAB: "Grabbing ball",
@@ -135,7 +133,7 @@ class Striker:
 
             else:
                 # print("[STRIKER - CLOSE PLACEMENT] Placing")
-                self.__state_logger.update_state(Striker.states.CLOSE_PLACEMENT)
+                self.__state_logger.update_state(Striker.states.PLACEMENT)
                 self.__manager.go_to(self.__robot, *pre_shoot_pos)
 
         else:
