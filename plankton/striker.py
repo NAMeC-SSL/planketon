@@ -16,7 +16,7 @@ class Striker:
     # Multiplies the vector
     MULT_GO_BEHIND = 2
     # Maximum difference of degrees of offset to consider that we're aiming towards the target
-    DEG_DIFF_TARGET_ALIGN = 10
+    DEG_DIFF_TARGET_ALIGN = 5
     # Minimum distance for the robot to consider shooting instead of running towards the ball
     SHOOT_MIN_DIST_FROM_BALL = 0.29
     # If distance from ball is inferior to k, we consider that we currently have the ball
